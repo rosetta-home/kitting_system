@@ -29,6 +29,11 @@ defmodule KittingSystem.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [
+      {:cowboy, "~> 1.1"},
+      {:mongodb, "~> 0.2.0"},
+      {:poolboy, "~> 1.5"},
+      {:mdns, "~> 0.1.5"}
+    ]
   end
 end
