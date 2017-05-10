@@ -1,7 +1,7 @@
 defmodule KittingSystem.WebServer do
 
   def start_link do
-    configure_mdns
+    configure_mdns()
     port = Application.get_env(:kitting_system, :port, "8082") |> String.to_integer
     dispatch = :cowboy_router.compile([
       { :_,

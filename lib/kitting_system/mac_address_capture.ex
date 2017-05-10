@@ -3,6 +3,7 @@ defmodule KittingSystem.MacAddressCapture do
   alias KittingSystem.Print
 
   @collection "mac_address"
+  @num_labels Application.get_env(:kitting_system, :num_labels)
 
   def init({:tcp, :http}, req, _opts) do
     {:ok, req, %{}}
@@ -40,8 +41,11 @@ defmodule KittingSystem.MacAddressCapture do
   end
 
   defp print({req, id}) do
-    Logger.debug "Printing ID: #{id}"
-    id |> Print.compile_template |> Print.send
+    Logger.debug "Printing #{@num_labels} labels ID: #{id}"
+    1..@num_labels
+    |> Enum.each(fn _i ->
+      id |> Print.compile_template |> Print.send
+    end)
     {req, id}
   end
 
