@@ -8,6 +8,7 @@ defmodule KittingSystem.WebServer do
         [
           #{"/", Interface.UI.Index, []},
           {"/mac_address_capture", KittingSystem.MacAddressCapture, []},
+          {"/qr_capture", KittingSystem.QRCodeCapture, []},
           #{"/network", Interface.UI.Network, []},
           #{"/connect_network", Interface.UI.ConnectNetwork, []},
           #{"/reset_network", Interface.UI.ResetNetwork, []},
