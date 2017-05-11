@@ -1,0 +1,12 @@
+[submodule "rosetta_home"]
+	path = rosetta_home
+	url = git@github.com:rosetta-home/rosetta_home.git
+	branch = master
+[submodule "IndoorAirQualitySensor"]
+	path = IndoorAirQualitySensor
+	url = git@github.com:NationalAssociationOfRealtors/IndoorAirQualitySensor.git
+	branch = v0.5
+[submodule "RFM69-USB-Gateway"]
+	path = RFM69-USB-Gateway
+	url = git@github.com:NationalAssociationOfRealtors/RFM69-USB-Gateway.git
+	branch = master
