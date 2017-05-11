@@ -18,9 +18,22 @@ services:
       - ./IndoorAirQualitySensor/libraries:/data/ieq
       - ./RFM69-USB-Gateway/firmware:/code/gateway
       - ./IndoorAirQualitySensor/firmware:/code/ieq
+  nerves-firmware:
+    build: https://github.com/rosetta-home/docker-nerves-firmware.git
+    volumes:
+      - nerves-data:/data/nerves
+      - ./rosetta_home:/app
+      - ./priv/firmware/hub:/app/apps/fw/_images
+      - ./priv/build/hub:/app/apps/fw/_build
+      - ./priv/build/hub:/root/.nerves
+    working_dir: /app/apps/fw
+    env_file:
+      - nerves-firmware.prod.env
 
 volumes:
   mongo-data:
     driver: local
   arduino-data:
+    driver: local
+  nerves-data:
     driver: local
