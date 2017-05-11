@@ -5,10 +5,11 @@ defmodule KittingSystem.QRCodeCapture do
   @collection "mac_address"
 
   def init({:tcp, :http}, req, _opts) do
-    {:ok, req, %{}}
+    Process.send_after(self(), :handle, 0)
+    {:loop, req, %{}, 30_000}
   end
 
-  def handle(req, state) do
+  def info(:handle, req, state) do
     req
     |> get
     |> verify
