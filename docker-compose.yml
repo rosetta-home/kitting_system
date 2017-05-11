@@ -9,7 +9,18 @@ services:
       driver: syslog
     ports:
       - "27017:27017"
+  arduino-builder:
+    build: https://github.com/rosetta-home/docker-arduino-builder.git
+    volumes:
+      - arduino-data:/data/arduino
+      - ./priv/firmware:/data/firmware
+      - ./RFM69-USB-Gateway/libraries:/data/gateway
+      - ./IndoorAirQualitySensor/libraries:/data/ieq
+      - ./RFM69-USB-Gateway/firmware:/code/gateway
+      - ./IndoorAirQualitySensor/firmware:/code/ieq
 
 volumes:
   mongo-data:
+    driver: local
+  arduino-data:
     driver: local
