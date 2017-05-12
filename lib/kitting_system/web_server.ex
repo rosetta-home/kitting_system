@@ -9,11 +9,12 @@ defmodule KittingSystem.WebServer do
           #{"/", Interface.UI.Index, []},
           {"/mac_address_capture", KittingSystem.MacAddressCapture, []},
           {"/qr_capture", KittingSystem.QRCodeCapture, []},
+          {"/qr_reader", KittingSystem.QRCodeReader, []},
           #{"/network", Interface.UI.Network, []},
           #{"/connect_network", Interface.UI.ConnectNetwork, []},
           #{"/reset_network", Interface.UI.ResetNetwork, []},
           #{"/app.js", :cowboy_static, {:priv_file, :interface, "app.js"}},
-          #{"/static/[...]", :cowboy_static, {:priv_dir,  :interface, "static"}},
+          {"/static/[...]", :cowboy_static, {:priv_dir,  :kitting_system, "ui/static"}},
 
         ]}
       ])

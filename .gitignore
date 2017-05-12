@@ -33,3 +33,4 @@ priv/build/gateway/*
 priv/build/ieq/*
 !priv/build/ieq/.gitkeep
 *.prod.env
+priv/certs

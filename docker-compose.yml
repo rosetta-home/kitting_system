@@ -29,6 +29,13 @@ services:
     working_dir: /app/apps/fw
     env_file:
       - nerves-firmware.prod.env
+  easypki:
+    build: /app/docker-easypki
+    volumes:
+      - ./priv/certs:/data/easypki
+    env_file:
+      - easypki.prod.env
+
 
 volumes:
   mongo-data:

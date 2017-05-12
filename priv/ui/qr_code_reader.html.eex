@@ -1,0 +1,74 @@
+<html>
+<head>
+<title>QRCODE Reader</title>
+
+<style type="text/css">
+	#qr-canvas {display: none;}
+</style>
+
+<script type="text/javascript" src="static/js/qr_code_reader/grid.js"></script>
+<script type="text/javascript" src="static/js/qr_code_reader/version.js"></script>
+<script type="text/javascript" src="static/js/qr_code_reader/detector.js"></script>
+<script type="text/javascript" src="static/js/qr_code_reader/formatinf.js"></script>
+<script type="text/javascript" src="static/js/qr_code_reader/errorlevel.js"></script>
+<script type="text/javascript" src="static/js/qr_code_reader/bitmat.js"></script>
+<script type="text/javascript" src="static/js/qr_code_reader/datablock.js"></script>
+<script type="text/javascript" src="static/js/qr_code_reader/bmparser.js"></script>
+<script type="text/javascript" src="static/js/qr_code_reader/datamask.js"></script>
+<script type="text/javascript" src="static/js/qr_code_reader/rsdecoder.js"></script>
+<script type="text/javascript" src="static/js/qr_code_reader/gf256poly.js"></script>
+<script type="text/javascript" src="static/js/qr_code_reader/gf256.js"></script>
+<script type="text/javascript" src="static/js/qr_code_reader/decoder.js"></script>
+<script type="text/javascript" src="static/js/qr_code_reader/qrcode.js"></script>
+<script type="text/javascript" src="static/js/qr_code_reader/findpat.js"></script>
+<script type="text/javascript" src="static/js/qr_code_reader/alignpat.js"></script>
+<script type="text/javascript" src="static/js/qr_code_reader/databr.js"></script>
+
+</head>
+
+<body onload="load()">
+		<video id="video" width="640" height="480" muted loop autoplay></video>
+		<canvas id="qr-canvas" width="640" height="480"></canvas>
+</body>
+
+<script type="text/javascript">
+	var constraints = {audio: false, video: { width: 640, height: 480 }};
+	var canvas = document.getElementById('qr-canvas').getContext('2d');
+	var video = document.getElementById('video');
+	var last = 0;
+	qrcode.debug = true;
+
+	function read(a){
+		alert(a);
+	}
+
+	function load(){
+		qrcode.callback = read;
+		var promise = navigator.mediaDevices.getUserMedia(constraints)
+		.then(function(mediaStream){
+			video.setAttribute('style', '-moz-transform:rotateY(-180deg);-webkit-transform:rotateY(-180deg);transform:rotateY(-180deg);');
+			video.srcObject = mediaStream;
+			draw();
+		});
+	}
+
+	function draw(timestamp){
+		var next = timestamp - last;
+		if(next >= 200){
+			canvas.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, canvas.canvas.width, canvas.canvas.height);
+			decode();
+			last = timestamp;
+		}
+		requestAnimationFrame(draw);
+	}
+
+	function decode(){
+		console.log("decode");
+		try{
+			qrcode.decode();
+		}catch(e){
+			console.error(e);
+		}
+	}
+</script>
+</html>
