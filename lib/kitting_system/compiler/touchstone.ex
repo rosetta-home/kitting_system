@@ -15,5 +15,6 @@ defmodule KittingSystem.Compiler.Touchstone do
       "-build-path", "/data/firmware/ieq",
       "/code/ieq/firmware.ino"
     ]
+    ["priv/firmware/ieq/firmware.ino.hex", ]
   end
 end
