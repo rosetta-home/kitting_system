@@ -14,6 +14,7 @@ defmodule KittingSystem.QRCodeCapture do
     req
     |> get
     |> verify
+    |> enumerate
     |> compile
     |> burn
     |> reply(state)
@@ -42,15 +43,19 @@ defmodule KittingSystem.QRCodeCapture do
     {req, id}
   end
 
-  defp compile({req, id}) do
-    req |> update_status("Compiling Touchstone: #{id}", "")
-    paths = id |> Compiler.Touchstone.compile
+  defp enumerate({req, id}) do
+    {req, Harness.enumerate, id}
+  end
+
+  defp compile({req, hardware, id}) do
+    req |> update_status("Compiling Touchstones (#{hardware.touchstone}): #{id}", "")
+    paths = id |> Compiler.Touchstone.compile(hardware.touchstone)
     req |> update_status(" - Done")
-    req |> update_status("Compiling Gateway: #{id}", "")
-    paths = [id |> Compiler.Gateway.compile] ++ paths
+    req |> update_status("Compiling Gateway (#{hardware.gateway}): #{id}", "")
+    paths = (id |> Compiler.Gateway.compile(hardware.gateway)) ++ paths
     req |> update_status(" - Done")
-    req |> update_status("Compiling Hub: #{id}", "")
-    paths = [id |> Compiler.Hub.compile] ++ paths
+    req |> update_status("Compiling Hub (#{hardware.hub}): #{id}", "")
+    paths = (id |> Compiler.Hub.compile(hardware.hub)) ++ paths
     req |> update_status(" - Done")
     {req, paths}
   end
