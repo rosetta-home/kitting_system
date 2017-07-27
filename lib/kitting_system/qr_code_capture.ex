@@ -1,11 +1,12 @@
 defmodule KittingSystem.QRCodeCapture do
   require Logger
   alias KittingSystem.{Compiler, Harness}
+  alias KittingSystem.Flash.Arduino
 
   @collection "mac_address"
 
   def init({:tcp, :http}, req, _opts) do
-    {ok, req2} = :cowboy_req.chunked_reply(200, [], req)
+    {ok, req2} = :cowboy_req.chunked_reply(200, [{"content-type", "text/html"}], req)
     Process.send_after(self(), :handle, 0)
     {:loop, req2, %{}}
   end
@@ -55,25 +56,41 @@ defmodule KittingSystem.QRCodeCapture do
     paths = (id |> Compiler.Gateway.compile(hardware.gateway)) ++ paths
     req |> update_status(" - Done")
     req |> update_status("Compiling Hub (#{hardware.hub}): #{id}", "")
+    req |> keep_alive(20) #nerves compilation takes a bit, cowboy closes the connection if nothing comes through
     paths = (id |> Compiler.Hub.compile(hardware.hub)) ++ paths
     req |> update_status(" - Done")
     {req, paths}
   end
 
   def burn({req, paths}) do
-    req |> update_status("Burning: #{paths |> Enum.join(", ")}", "")
-    paths |> Harness.burn
-    req |> update_status(" - Done")
+    req |> update_status("Burning: ", "")
+    paths |> Enum.each(fn fw ->
+      req |> update_status("Burning: #{fw}", "")
+      case fw |> String.ends_with?(".hex") do
+        true -> fw |> Arduino.flash("/dev/ttyUSB1")
+        false -> :ok
+      end
+      req |> update_status(" - Done")
+    end)
     {req, paths}
+  end
+
+  defp reply({req, paths}, state) do
+    req |> update_status("All Set!")
+    {:ok, req, state}
+  end
+
+  defp keep_alive(req, secs) do
+    Task.start_link(fn ->
+      1..secs |> Enum.each(fn _ ->
+        req |> update_status("...", "")
+        :timer.sleep(1000)
+      end)
+    end)
   end
 
   def update_status(req, status, prepend \\ "\r\n") do
     :cowboy_req.chunk("#{status}#{prepend}", req)
-  end
-
-  defp reply({req, paths}, state) do
-    req |> update_status("Done!")
-    {:ok, req, state}
   end
 
   defp get_filter(id) do
