@@ -33,7 +33,11 @@ defmodule KittingSystem.Mixfile do
       {:cowboy, "~> 1.1"},
       {:mongodb, "~> 0.2.0"},
       {:poolboy, "~> 1.5"},
-      {:mdns, "~> 0.1.5"}
+      {:mdns, "~> 0.1.5"},
+      {:ex_aws, "~> 2.0"},
+      {:ex_aws_s3, "~> 2.0"},
+      {:hackney, "~> 1.10"},
+      {:poison, "~> 3.1"}
     ]
   end
 end
