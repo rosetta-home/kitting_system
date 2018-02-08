@@ -2,11 +2,15 @@
 	path = priv/systems/rosetta_home
 	url = git@github.com:rosetta-home/rosetta_home.git
 	branch = master
-[submodule "IndoorAirQualitySensor"]
-	path = priv/systems/IndoorAirQualitySensor
-	url = git@github.com:NationalAssociationOfRealtors/IndoorAirQualitySensor.git
-	branch = v0.5
 [submodule "RFM69-USB-Gateway"]
 	path = priv/systems/RFM69-USB-Gateway
 	url = git@github.com:NationalAssociationOfRealtors/RFM69-USB-Gateway.git
+	branch = master
+[submodule "priv/systems/hardware_verification"]
+	path = priv/systems/hardware_verification
+	url = git@github.com:rosetta-home/hardware_verification.git
+	branch = master
+[submodule "priv/systems/Touchstone"]
+	path = priv/systems/Touchstone
+	url = git@github.com:NationalAssociationOfRealtors/Touchstone.git
 	branch = master

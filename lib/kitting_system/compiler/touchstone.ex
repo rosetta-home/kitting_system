@@ -16,7 +16,7 @@ defmodule KittingSystem.Compiler.Touchstone do
         "-libraries", "/data/ieq",
         "-fqbn", "arduino:avr:uno",
         "-build-path", "/data/firmware/ieq",
-        "/code/gateway/firmware.ino"
+        "/code/ieq/firmware.ino"
       ]
       System.cmd("mv", ["priv/firmware/ieq/firmware.ino.hex", "priv/firmware/ieq/#{name}"])
       "priv/firmware/ieq/#{name}"

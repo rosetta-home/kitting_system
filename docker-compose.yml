@@ -15,6 +15,7 @@ services:
       - arduino-data:/data/arduino
       - ./priv/firmware:/data/firmware
       - ./priv/systems/RFM69-USB-Gateway/libraries:/data/gateway
+      - ./priv/systems/hardware_verification:/code/hardware_verification
       - ./priv/systems/IndoorAirQualitySensor/libraries:/data/ieq
       - ./priv/systems/RFM69-USB-Gateway/firmware:/code/gateway
       - ./priv/systems/IndoorAirQualitySensor/firmware:/code/ieq
