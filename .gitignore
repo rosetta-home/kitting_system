@@ -28,13 +28,11 @@ priv/firmware/hub/*
 !priv/firmware/hub/.gitkeep
 priv/firmware/gateway/*
 !priv/firmware/gateway/.gitkeep
-priv/firmware/ieq/*
-!priv/firmware/ieq/.gitkeep
+priv/firmware/touchstone/*
+!priv/firmware/touchstone/.gitkeep
+priv/firmware/hardware_verification/*
+!priv/firmware/hardware_verification/.gitkeep
 priv/build/hub/*
 !priv/build/hub/.gitkeep
-priv/build/gateway/*
-!priv/build/gateway/.gitkeep
-priv/build/ieq/*
-!priv/build/ieq/.gitkeep
 *.prod.env
 !priv/certs/.gitkeep

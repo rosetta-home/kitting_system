@@ -1,0 +1,9 @@
+docker-compose run arduino-builder -compile -hardware /opt/arduino/hardware -tools /opt/arduino-builder/tools -tools /opt/arduino/hardware/tools -libraries /data/gateway -libraries /data/ieq -fqbn arduino:avr:uno -build-path /data/firmware/gateway /code/gateway/firmware.ino
+
+avrdude -C/app/kitting_system/priv/avrdude.conf -v -patmega328p -carduino -P/dev/ttyUSB1 b115200 -D -Uflash:w:/app/kitting_system/priv/firmware/gateway/firmware1.ino.hex:i
+
+avrdude -P/dev/ttyUSB0 b115200 -p m328p -C /app/kitting_system/priv/avrdude.conf -c arduino -F -e -U flash:w:/app/kitting_system/priv/ATmegaBOOT_168_atmega328.hex
+
+atmega328p-mu1724 china-6
+
+atmega328p-mu1708

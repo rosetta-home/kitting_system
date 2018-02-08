@@ -1,2 +1,0 @@
-#define NODEID <%= id %>
-#define ENCRYPTKEY "<%= key %>"

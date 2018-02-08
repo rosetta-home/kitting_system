@@ -5,8 +5,10 @@ defmodule KittingSystem.Application do
     import Supervisor.Spec, warn: false
 
     children = [
+      worker(KittingSystem.Harness, []),
+      worker(KittingSystem.TouchstoneCounter, []),
       Mongo.child_spec([name: KittingSystem.Mongo, database: "rosetta_home_kitting_system", pool: DBConnection.Poolboy]),
-      worker(KittingSystem.WebServer, []),
+      worker(KittingSystem.WebServer, [])
     ]
     opts = [strategy: :one_for_one, name: KittingSystem.Supervisor]
     Supervisor.start_link(children, opts)

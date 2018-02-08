@@ -5,7 +5,7 @@ defmodule KittingSystem.Flash.Arduino do
   @baud_rate "115200"
 
   def flash(firmware, interface) do
-    System.cmd("avrdude", [
+    res = System.cmd("avrdude", [
       "-C/#{:code.priv_dir(:kitting_system)}/avrdude.conf",
       "-v",
       "-p#{@arduino_type}",
@@ -14,6 +14,8 @@ defmodule KittingSystem.Flash.Arduino do
       "b#{@baud_rate}",
       "-D",
       "-Uflash:w:#{firmware}:i"
-    ])
+    ],
+    into: [])
+    Logger.info "#{inspect res}"
   end
 end

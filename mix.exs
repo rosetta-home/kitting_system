@@ -37,7 +37,8 @@ defmodule KittingSystem.Mixfile do
       {:ex_aws, "~> 2.0"},
       {:ex_aws_s3, "~> 2.0"},
       {:hackney, "~> 1.10"},
-      {:poison, "~> 3.1"}
+      {:poison, "~> 3.1"},
+      {:nerves_uart, "~> 1.0"}
     ]
   end
 end

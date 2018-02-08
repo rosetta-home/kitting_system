@@ -15,10 +15,11 @@ services:
       - arduino-data:/data/arduino
       - ./priv/firmware:/data/firmware
       - ./priv/systems/RFM69-USB-Gateway/libraries:/data/gateway
-      - ./priv/systems/hardware_verification:/code/hardware_verification
-      - ./priv/systems/IndoorAirQualitySensor/libraries:/data/ieq
+      - ./priv/systems/hardware_verification/libraries:/data/hardware_verification
+      - ./priv/systems/Touchstone/libraries:/data/touchstone
       - ./priv/systems/RFM69-USB-Gateway/firmware:/code/gateway
-      - ./priv/systems/IndoorAirQualitySensor/firmware:/code/ieq
+      - ./priv/systems/Touchstone/firmware:/code/touchstone
+      - ./priv/systems/hardware_verification/firmware:/code/hardware_verification
   nerves-firmware:
     build: https://github.com/rosetta-home/docker-nerves-firmware.git
     volumes:
