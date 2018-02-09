@@ -2,10 +2,10 @@ defmodule KittingSystem.Compiler.Touchstone do
   require Logger
   def compile(id) do
     num = KittingSystem.TouchstoneCounter.get_id()
-    o_dir = Path.join(:code.priv_dir(:kitting_system), "systems/Touchstone/firmware")
-    n_dir = Path.join(:code.priv_dir(:kitting_system), "build/touchstone/firmware#{num}")
+    o_dir = Path.join(:code.priv_dir(:kitting_system), "systems/Touchstone/firmware/")
+    n_dir = Path.join(:code.priv_dir(:kitting_system), "build/touchstone/firmware#{num}/")
     System.cmd("cp", ["-r", o_dir, n_dir])
-    System.cmd("mkdir", [Path.join(:code.priv_dir(:kitting_system), "firmware/touchstone/firmware#{num}")])
+    System.cmd("mkdir", ["-p", Path.join(:code.priv_dir(:kitting_system), "firmware/touchstone/firmware#{num}")])
     Logger.debug "Compiling Touchstone ID: #{num}"
     config(num, id)
     res = System.cmd "docker-compose", [
@@ -22,7 +22,10 @@ defmodule KittingSystem.Compiler.Touchstone do
       "-build-path", "/data/firmware/touchstone/firmware#{num}",
       "/build/touchstone/firmware#{num}/firmware.ino"
     ],
-    into: []
+    stderr_to_stdout: true,
+    into: [],
+    parallelism: true
+
     Logger.info("#{inspect res}")
     "firmware/touchstone/firmware#{num}/firmware.ino.hex"
   end

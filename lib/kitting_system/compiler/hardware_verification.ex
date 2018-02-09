@@ -3,7 +3,7 @@ defmodule KittingSystem.Compiler.HardwareVerification do
   def compile() do
     name = "firmware.ino.hex"
     Logger.debug "Compiling HardwareVerification: #{name}"
-    System.cmd "docker-compose", [
+    res = System.cmd "docker-compose", [
       "run",
       "--rm",
       "arduino-builder",
@@ -15,7 +15,12 @@ defmodule KittingSystem.Compiler.HardwareVerification do
       "-fqbn", "arduino:avr:uno",
       "-build-path", "/data/firmware/hardware_verification",
       "/code/hardware_verification/firmware.ino"
-    ]
+    ],
+    stderr_to_stdout: true,
+    into: [],
+    parallelism: true
+
+    Logger.info "HardwareVerification: #{inspect res}"
     "firmware/hardware_verification/#{name}"
   end
 end

@@ -41,6 +41,7 @@ priv/build/hub/*
 !priv/build/hub/.gitkeep
 
 priv/build/touchstone/firmware*
+priv/build/gateway/firmware*
 
 !priv/certs/.gitkeep
 

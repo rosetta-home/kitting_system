@@ -18,7 +18,10 @@ defmodule KittingSystem.Flash.Arduino do
       "-b#{@baud_rate}",
       "-Uflash:w:/firmware.ino:i"
     ],
-    into: [])
+    stderr_to_stdout: true,
+    into: [],
+    parallelism: true)
+
     Logger.info "#{inspect res}"
   end
 end

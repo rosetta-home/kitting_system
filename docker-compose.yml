@@ -21,6 +21,7 @@ services:
       - ./priv/systems/Touchstone/firmware:/code/touchstone
       - ./priv/systems/hardware_verification/firmware:/code/hardware_verification
       - ./priv/build/touchstone:/build/touchstone
+      - ./priv/build/gateway:/build/gateway
   nerves-firmware:
     build: https://github.com/rosetta-home/docker-nerves-firmware.git
     volumes:
