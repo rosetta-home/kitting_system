@@ -2,10 +2,14 @@ defmodule KittingSystem.Compiler.Touchstone do
   require Logger
   def compile(id) do
     num = KittingSystem.TouchstoneCounter.get_id()
-    name = "firmware#{num}.ino.hex"
-    Logger.debug "Compiling Touchstone ID: #{id} - #{name}"
+    o_dir = Path.join(:code.priv_dir(:kitting_system), "systems/Touchstone/firmware")
+    n_dir = Path.join(:code.priv_dir(:kitting_system), "build/touchstone/firmware#{num}")
+    System.cmd("cp", ["-r", o_dir, n_dir])
+    System.cmd("mkdir", [Path.join(:code.priv_dir(:kitting_system), "firmware/touchstone/firmware#{num}")])
+    Logger.debug "Compiling Touchstone ID: #{num}"
     config(num, id)
     res = System.cmd "docker-compose", [
+      "-p", "touchstone#{num}",
       "run",
       "--rm",
       "arduino-builder",
@@ -15,18 +19,17 @@ defmodule KittingSystem.Compiler.Touchstone do
       "-tools", "/opt/arduino/hardware/tools",
       "-libraries", "/data/touchstone",
       "-fqbn", "arduino:avr:uno",
-      "-build-path", "/data/firmware/touchstone",
-      "/code/touchstone/firmware.ino"
+      "-build-path", "/data/firmware/touchstone/firmware#{num}",
+      "/build/touchstone/firmware#{num}/firmware.ino"
     ],
     into: []
     Logger.info("#{inspect res}")
-    System.cmd("mv", ["priv/firmware/touchstone/firmware.ino.hex", "priv/firmware/touchstone/#{name}"])
-    "priv/firmware/touchstone/#{name}"
+    "firmware/touchstone/firmware#{num}/firmware.ino.hex"
   end
 
   defp config(id, key) do
-    template_path = Path.join(:code.priv_dir(:kitting_system), "build/ieq_config.template")
-    output_path = Path.join(:code.priv_dir(:kitting_system), "systems/Touchstone/firmware/config.h")
+    template_path = Path.join(:code.priv_dir(:kitting_system), "ieq_config.template")
+    output_path = Path.join(:code.priv_dir(:kitting_system), "build/touchstone/firmware#{id}/config.h")
     :ok = output_path |> File.write(template_path |> EEx.eval_file([id: id, key: key]))
     output_path
   end

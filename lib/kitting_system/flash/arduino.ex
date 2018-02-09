@@ -5,15 +5,18 @@ defmodule KittingSystem.Flash.Arduino do
   @baud_rate "115200"
 
   def flash(firmware, interface) do
-    res = System.cmd("avrdude", [
-      "-C/#{:code.priv_dir(:kitting_system)}/avrdude.conf",
-      "-v",
+    fw = Path.join(:code.priv_dir(:kitting_system), firmware)
+    res = System.cmd("docker", [
+      "run",
+      "--rm",
+      "-v=#{fw}:/firmware.ino",
+      "--device=#{interface}",
+      "akshmakov/avrdude",
       "-p#{@arduino_type}",
       "-carduino",
       "-P#{interface}",
-      "b#{@baud_rate}",
-      "-D",
-      "-Uflash:w:#{firmware}:i"
+      "-b#{@baud_rate}",
+      "-Uflash:w:/firmware.ino:i"
     ],
     into: [])
     Logger.info "#{inspect res}"

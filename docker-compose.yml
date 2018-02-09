@@ -20,6 +20,7 @@ services:
       - ./priv/systems/RFM69-USB-Gateway/firmware:/code/gateway
       - ./priv/systems/Touchstone/firmware:/code/touchstone
       - ./priv/systems/hardware_verification/firmware:/code/hardware_verification
+      - ./priv/build/touchstone:/build/touchstone
   nerves-firmware:
     build: https://github.com/rosetta-home/docker-nerves-firmware.git
     volumes:
@@ -31,6 +32,8 @@ services:
     working_dir: /app/apps/fw
     env_file:
       - nerves-firmware.prod.env
+  avrdude:
+    image: akshmakov/avrdude
   easypki:
     build: /app/docker-easypki
     volumes:

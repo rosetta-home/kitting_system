@@ -24,15 +24,26 @@ erl_crash.dump
 .env
 
 priv/*.compiled
+
 priv/firmware/hub/*
 !priv/firmware/hub/.gitkeep
+
 priv/firmware/gateway/*
 !priv/firmware/gateway/.gitkeep
+
 priv/firmware/touchstone/*
 !priv/firmware/touchstone/.gitkeep
+
 priv/firmware/hardware_verification/*
 !priv/firmware/hardware_verification/.gitkeep
+
 priv/build/hub/*
 !priv/build/hub/.gitkeep
-*.prod.env
+
+priv/build/touchstone/firmware*
+
 !priv/certs/.gitkeep
+
+priv/mongo-backup/*
+
+*.prod.env

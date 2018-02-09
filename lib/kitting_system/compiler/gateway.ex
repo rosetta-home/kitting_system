@@ -18,12 +18,11 @@ defmodule KittingSystem.Compiler.Gateway do
       "/code/gateway/firmware.ino"
     ],
     into: []
-    
-    "priv/firmware/gateway/#{name}"
+    "firmware/gateway/#{name}"
   end
 
   defp config(id, key) do
-    template_path = Path.join(:code.priv_dir(:kitting_system), "build/ieq_config.template")
+    template_path = Path.join(:code.priv_dir(:kitting_system), "ieq_config.template")
     output_path = Path.join(:code.priv_dir(:kitting_system), "systems/RFM69-USB-Gateway/firmware/config.h")
     :ok = output_path |> File.write(template_path |> EEx.eval_file([id: id, key: key]))
     output_path

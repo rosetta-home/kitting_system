@@ -16,6 +16,6 @@ defmodule KittingSystem.Compiler.HardwareVerification do
       "-build-path", "/data/firmware/hardware_verification",
       "/code/hardware_verification/firmware.ino"
     ]
-    "priv/firmware/hardware_verification/#{name}"
+    "firmware/hardware_verification/#{name}"
   end
 end
