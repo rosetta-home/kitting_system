@@ -12,6 +12,7 @@ defmodule KittingSystem.Flash.Arduino do
       "-v=#{fw}:/firmware.ino",
       "--device=#{interface}",
       "akshmakov/avrdude",
+      "-V",
       "-p#{@arduino_type}",
       "-carduino",
       "-P#{interface}",

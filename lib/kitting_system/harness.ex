@@ -5,7 +5,7 @@ defmodule KittingSystem.Harness do
   alias KittingSystem.Compiler.HardwareVerification
 
   defmodule State do
-    defstruct [devices: %{}, verification_fw: nil]
+    defstruct [devices: %{}, verification_fw: nil, calling_process: nil]
   end
 
   def enumerate(id) do
@@ -18,9 +18,9 @@ defmodule KittingSystem.Harness do
 
   def init(:ok) do
     fw = HardwareVerification.compile()
-    devices = Nerves.UART.enumerate()
-    verify_devices(devices, fw, "Tt-Mh=SQ#dn#JY3_")
-    {:ok, %State{devices: devices, verification_fw: fw}}
+    #devices = Nerves.UART.enumerate()
+    #verify_devices(devices, fw, "Tt-Mh=SQ#dn#JY3_")
+    {:ok, %State{verification_fw: fw}}
   end
 
   def verify_devices(devices, fw, id) do
@@ -29,13 +29,15 @@ defmodule KittingSystem.Harness do
     end)
   end
 
-  def handle_call({:enumerate, id}, _from, state) do
-    verify_devices(Nerves.UART.enumerate(), state.verification_fw, id)
-    {:reply, }
+  def handle_call({:enumerate, id}, {cp, _}, state) do
+    devices = Nerves.UART.enumerate()
+    verify_devices(devices, state.verification_fw, id)
+    {:reply, Map.keys(devices) |> Enum.count(), %State{state | calling_process: cp}}
   end
 
-  def handle_info({:device, port, type, status}, state) do
+  def handle_info({:device, port, type, status} = mes, state) do
     Logger.info "Harness got result from #{port} TYPE: #{type} - #{status}"
+    state.calling_process |> send(mes)
     {:noreply, state}
   end
 

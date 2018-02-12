@@ -2,9 +2,10 @@ defmodule KittingSystem.Compiler.Touchstone do
   require Logger
   def compile(id) do
     num = KittingSystem.TouchstoneCounter.get_id()
-    o_dir = Path.join(:code.priv_dir(:kitting_system), "systems/Touchstone/firmware/")
+    files = Path.join(:code.priv_dir(:kitting_system), "systems/Touchstone/firmware/.")
     n_dir = Path.join(:code.priv_dir(:kitting_system), "build/touchstone/firmware#{num}/")
-    System.cmd("cp", ["-r", o_dir, n_dir])
+    System.cmd("mkdir", ["-p", n_dir])
+    System.cmd("cp", ["-a", files, n_dir])
     System.cmd("mkdir", ["-p", Path.join(:code.priv_dir(:kitting_system), "firmware/touchstone/firmware#{num}")])
     Logger.debug "Compiling Touchstone ID: #{num}"
     config(num, id)

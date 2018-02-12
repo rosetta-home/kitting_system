@@ -5,20 +5,40 @@ defmodule KittingSystem.QRCodeCapture do
 
   @collection "mac_address"
 
+  defmodule State do
+    defstruct [num_devices: 0, completed_devices: 0, current_id: 0]
+  end
+
   def init({:tcp, :http}, req, _opts) do
     {ok, req2} = :cowboy_req.chunked_reply(200, [{"content-type", "text/html"}], req)
     Process.send_after(self(), :handle, 0)
-    {:loop, req2, %{}}
+    {:loop, req2, %State{}}
   end
 
   def info(:handle, req, state) do
-    req
-    |> get
-    |> verify
-    |> enumerate
-    |> compile
-    |> burn
-    |> reply(state)
+    {req, num_devices, id} =
+      req
+      |> get
+      |> verify
+      |> enumerate
+      keep_alive(req, 50_000)
+    {:loop, req, %State{state | num_devices: num_devices, current_id: id}}
+  end
+
+  def info({:device, port, type, :complete}, req, state) do
+    completed = state.completed_devices + 1
+    case completed >= state.num_devices do
+      true -> reply({req, []}, state)
+      false ->
+        update_status(req, "#{port} - #{type}: complete")
+        {:loop, req, %State{state | completed_devices: completed}}
+    end
+  end
+
+  def info({:device, port, type, status}, req, state) do
+    Logger.info "Web interface got result from #{port} type: #{type} - #{status}"
+    update_status(req, "#{port} - #{type}: #{status}")
+    {:loop, req, state}
   end
 
   defp get(req) do
@@ -45,34 +65,7 @@ defmodule KittingSystem.QRCodeCapture do
   end
 
   defp enumerate({req, id}) do
-    {req, Harness.enumerate, id}
-  end
-
-  defp compile({req, hardware, id}) do
-    req |> update_status("Compiling Touchstones (#{hardware.touchstone}): #{id}", "")
-    paths = id |> Compiler.Touchstone.compile(hardware.touchstone)
-    req |> update_status(" - Done")
-    req |> update_status("Compiling Gateway (#{hardware.gateway}): #{id}", "")
-    paths = (id |> Compiler.Gateway.compile(hardware.gateway)) ++ paths
-    req |> update_status(" - Done")
-    req |> update_status("Compiling Hub (#{hardware.hub}): #{id}", "")
-    req |> keep_alive(20) #nerves compilation takes a bit, cowboy closes the connection if nothing comes through
-    paths = (id |> Compiler.Hub.compile(hardware.hub)) ++ paths
-    req |> update_status(" - Done")
-    {req, paths}
-  end
-
-  def burn({req, paths}) do
-    req |> update_status("Burning: ", "")
-    paths |> Enum.each(fn fw ->
-      req |> update_status("Burning: #{fw}", "")
-      case fw |> String.ends_with?(".hex") do
-        true -> fw |> Arduino.flash("/dev/ttyUSB1")
-        false -> :ok
-      end
-      req |> update_status(" - Done")
-    end)
-    {req, paths}
+    {req, Harness.enumerate(id), id}
   end
 
   defp reply({req, paths}, state) do
