@@ -3,7 +3,7 @@ defmodule KittingSystem.Device do
   alias KittingSystem.Flash.Arduino
   require Logger
 
-  @types %{"1": :gateway, "2": :touchstone, "0": :failure}
+  @types %{"1": :gateway, "2": :touchstone, "0": :failure, "3": :touchstone_partial}
 
   defmodule State do
     defstruct [:interface, :device_type, :uart, :fw, :harness, :id]
@@ -26,25 +26,43 @@ defmodule KittingSystem.Device do
     {:noreply, %State{state | uart: pid}}
   end
 
-  def handle_info({:nerves_uart, port, data}, %State{interface: interface} = state) when port == interface do
-    Logger.info "#{interface}: #{data}"
-    send_feedback(state.harness, state.interface, :verification, :flashed)
-    case String.starts_with?(data, "X:") do
-      true ->
-        Nerves.UART.close(state.uart)
-        Nerves.UART.stop(state.uart)
-        type = parse_result(data)
-        send_feedback(state.harness, interface, type, :compiling)
-        fw = compile(type, state.id, state)
-        send_feedback(state.harness, interface, type, :compiled)
-        send_feedback(state.harness, interface, type, :flashing)
-        burn(fw, port)
-        send_feedback(state.harness, interface, type, :flashed)
-        send_feedback(state.harness, interface, type, :complete)
-        Process.exit(self(), :normal)
-      _ -> nil
-    end
+  def handle_info({:nerves_uart, port, <<
+  "X:", type::binary-size(1), ",",
+  "t:", t::binary-size(1), ",",
+  "g:", g::binary-size(1), ",",
+  "l:", l::binary-size(1), ",",
+  "v:", v::binary-size(1), ",",
+  "r:", r::binary-size(1)>>},
+  %State{interface: interface} = state) when port == interface do
+    send_feedback(state.harness, interface, :verification, :flashed)
+    Nerves.UART.close(state.uart)
+    Nerves.UART.stop(state.uart)
+    type = Map.get(@types, String.to_existing_atom(type))
+    d = "t=#{t},g=#{g},l=#{l},v=#{v},r=#{r}"
+    send_feedback(state.harness, interface, type, "verification:#{d}")
+    send_feedback(state.harness, interface, type, :compiling)
+    fw = compile(type, state.id, state)
+    send_feedback(state.harness, interface, type, :compiled)
+    send_feedback(state.harness, interface, type, :flashing)
+    burn(fw, port)
+    send_feedback(state.harness, interface, type, :flashed)
+    send_feedback(state.harness, interface, type, :complete)
+    Process.exit(self(), :normal)
+    {:noreply, %State{state | device_type: type}}
+  end
+
+  def handle_info({:nerves_uart, port, << "i:", rest::binary>>}, %State{interface: interface} = state) when port == interface do
+    send_feedback(state.harness, interface, :data, "i:#{rest}")
     {:noreply, state}
+  end
+
+  def handle_info({:nerves_uart, port, data}, %State{interface: interface} = state) when port == interface do
+    {:noreply, state}
+  end
+
+  def verify_gateway(state) do
+    Logger.info "Opening Gateway UART: #{state.interface} - #{inspect state.uart}"
+    :ok = Nerves.UART.open(state.uart, state.interface, speed: 115200, framing: {Nerves.UART.Framing.Line, separator: "\n"})
   end
 
   def send_feedback(pid, interface, type, status) do
@@ -54,7 +72,7 @@ defmodule KittingSystem.Device do
   def parse_result(data) do
     [type, temp, g, l, voc, radio] = String.split(data, ",")
     [_, t] = String.split(type, ":")
-    Map.get(@types, String.to_existing_atom(t))
+
   end
 
   def compile(:gateway, id, state) do
@@ -67,6 +85,10 @@ defmodule KittingSystem.Device do
 
   def compile(:failure, id, state) do
     Logger.error("HARDWARE FAILURE ON: #{state.interface}. There should be a device with a red LED illuminated.")
+  end
+
+  def compile(:touchstone_partial, id, state) do
+    Logger.error("Partial Touchstone failure: #{state.interface}. There should be a device with an Orange LED illuminated.")
   end
 
   def burn(path, port) do

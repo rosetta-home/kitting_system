@@ -1,9 +1,10 @@
 defmodule KittingSystem.Compiler.Gateway do
   require Logger
   def compile(id) do
-    o_dir = Path.join(:code.priv_dir(:kitting_system), "systems/RFM69-USB-Gateway/firmware/")
+    files = Path.join(:code.priv_dir(:kitting_system), "systems/RFM69-USB-Gateway/firmware/.")
     n_dir = Path.join(:code.priv_dir(:kitting_system), "build/gateway/firmware1/")
-    System.cmd("cp", ["-r", o_dir, n_dir])
+    System.cmd("mkdir", ["-p", n_dir])
+    System.cmd("cp", ["-a", files, n_dir])
     System.cmd("mkdir", ["-p", Path.join(:code.priv_dir(:kitting_system), "firmware/gateway/firmware1")])
     Logger.debug "Compiling Gateway ID: 1"
     config(1, id)

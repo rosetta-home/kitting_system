@@ -4,27 +4,113 @@
 
 <style type="text/css">
 	/*#qr-canvas {display: none;}*/
-	#output {
+
+	@keyframes pulse{
+		0% { filter: opacity(1) }
+		50% { filter: opacity(.5) }
+		100% { filter: opacity(.25) }
+	}
+
+	.output {
 		border: 1px solid #777777;
 		padding: 0px;
 		margin: 20px;
-		width: 100%;
 		min-height: 300px;
 	}
-	#output ul{
-		list-style-type: none;
-		margin: 0;
-		padding: 0;
-	}
-	#output li{
-		border-bottom: 1px solid #dddddd;
-		padding: 7px;
-		background-color: #eeeeee;
+
+	.host {
+		border: 1px solid #777777;
+		padding: 30px;
+		margin: 20px;
 	}
 
-	#output li img{
-		height: 30px;
+	.output div{
+		border-bottom: 1px solid #eeeeee;
+		margin: 0;
+		padding: 20px;
 	}
+
+	.output div span.display{
+		background-color: #e3e6ef;
+		border: 1px solid #ffffff;
+		padding: 7px;
+	}
+
+	.output div.verification{
+		background: repeating-linear-gradient(45deg, #aabaef, #aabaef 5px, #aaddef 5px, #aaddef 10px);
+	}
+
+	.output div.touchstone{
+		background-color: #aabaef;
+	}
+
+	.output div.gateway{
+		background-color: #baefaa;
+	}
+
+	.output div.touchstone_partial{
+		background-color: #efaaba;
+	}
+
+	.output div.failure{
+		background-color: #FF0000;
+	}
+
+	.output div span.status{
+		margin-right: 20px;
+		background-color: #FF0000;
+		display: inline-block;
+		border: 1px solid #999999;
+		width: 10px;
+		height: 10px;
+		border-radius: 10px;
+	}
+
+	.output div.compiling span.status{
+		background-color: #FF0000;
+		animation-duration: .5s;
+  	animation-name: pulse;
+  	animation-iteration-count: infinite;
+		animation-direction: alternate-reverse;
+	}
+
+	.output div.flashing span.status{
+		background-color: #0000FF;
+		animation-duration: 1s;
+  	animation-name: pulse;
+  	animation-iteration-count: infinite;
+		animation-direction: alternate-reverse;
+	}
+
+	.output div.complete span.status{
+		background-color: #00FF00;
+	}
+
+	ul.meta {
+		list-style: none;
+	}
+
+	ul.meta li{
+		display: inline;
+		padding: 10px;
+	}
+
+	ul.meta li span {
+		display: inline-block;
+		height: 10px;
+		width: 10px;
+		border-radius: 10px;
+		margin-left: 10px;
+		border: 1px solid #999999;
+	}
+	ul.meta li.failure span{
+		background-image: radial-gradient(#FFFF11, #FF0000);
+	}
+
+	ul.meta li.success span{
+		background-image: radial-gradient(#FFFF00, #00FF00);
+	}
+
 </style>
 
 <script type="text/javascript" src="static/js/qr_code_reader/grid.js"></script>
@@ -50,37 +136,99 @@
 <body onload="load()">
 		<video id="video" width="320" muted loop autoplay></video>
 		<canvas id="qr-canvas" width="320"></canvas>
-		<div id="output"></div>
+		<div class="host" id="host"></div>
+		<div class="output" id="usb"></div>
 </body>
 
 <script type="text/javascript">
 	var constraints = {audio: false, video: { width: 320 }};
 	var canvas = document.getElementById('qr-canvas').getContext('2d');
 	var video = document.getElementById('video');
-	var output = document.getElementById('output');
 	var sending = false;
 	var last = 0;
 	qrcode.debug = true;
 
+	var devices = {};
+	var host = {}
+
+	function parse_device(string){
+		var parts = string.split(":");
+		var d = {
+			device: parts[0],
+			action: parts[1],
+			status: parts[2],
+			meta: {},
+		}
+		if(parts[3] && parts[3].startsWith("X")){
+			d.meta = parts[3].split(",").reduce((acc, el) => {
+				var p = el.split("=", 2);
+				acc[p[0]] = p[1];
+				return acc;
+			}, {});
+		}
+		return d;
+	}
+
+	function update_devices(device){
+		if(Object.keys(device.meta).length) console.log(device);
+		if(!device.action) return;
+		devices = JSON.parse(JSON.stringify(devices));
+		var n = {device: "", action: "", status: "", meta: {}};
+		var d_d = devices[device.device] || n;
+		var meta = Object.assign({}, device.meta);
+		delete device.meta;
+		var d = Object.assign(d_d, device);
+		if(Object.keys(meta).length) d.meta = meta;
+		devices[d.device] = d;
+	}
+
 	function read(a){
 		if(sending) return;
-		output.innerHTML = "<ul><li>Sending...</li></ul>"
+		document.getElementById("host").innerHTML = "Sending.."
 		sending = true;
-		console.log("Sending: " + a);
 		params = "id="+a.trim();
 		var xhr = new XMLHttpRequest();
 		xhr.open("POST", "/qr_capture", true);
 		xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-		xhr.onprogress = function () {
-  		output.innerHTML = "<ul><li>"+xhr.responseText.split("\r\n").join("</li><li>")+"<img id=\"loading\" src=\"/static/images/loading.gif\" /></li></ul>";
+		xhr.onprogress = function(){
+			xhr.responseText.split("\r\n").forEach( (st) =>{
+				var device = parse_device(st);
+				update_devices(device);
+			})
+			render_devices()
 		}
 		xhr.onreadystatechange = function () {
   		if(xhr.readyState === XMLHttpRequest.DONE){
 				sending = false;
-				document.getElementById('loading').setAttribute("style", "display: none;");
 			}
 		}
 		xhr.send(params);
+	}
+
+	function render_devices(){
+		console.log(devices);
+		var output = {usb: "", host: ""};
+		Object.keys(devices).forEach( (k) => {
+			var d = devices[k];
+			var id = d.device;
+			if(id.startsWith("ttyUSB")) id = "usb"
+			var st = "<div class=\""+d.status+ " "+d.action+"\"><span class=\"status\"></span><span class=\"display\">"+k+" - "+d.action+": "+d.status+ "</span>"+ meta_keys(d)+"</div>";
+			output[id]+=st;
+		})
+		document.getElementById("host").innerHTML = output.host;
+		document.getElementById("usb").innerHTML = output.usb;
+	}
+
+	function meta_keys(d){
+		var st = "<ul class=\"meta\">";
+		Object.keys(d.meta).forEach((k) => {
+			if(k != "X"){
+				var v = d.meta[k];
+				var c = v == "1" ? "success" : "failure";
+				st += "<li class=\""+c+"\">"+k+"<span></span></li>";
+			}
+		})
+		return st+="</ul>";
 	}
 
 	function load(){
@@ -109,7 +257,7 @@
 		try{
 			qrcode.decode();
 		}catch(e){
-			console.error(e);
+			//console.error(e);
 		}
 	}
 </script>
