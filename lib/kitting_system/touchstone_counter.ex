@@ -11,6 +11,10 @@ defmodule KittingSystem.TouchstoneCounter do
     end)
   end
 
+  def get_current() do
+    Agent.get(__MODULE__, fn state -> state end)
+  end
+
   def reset() do
     Agent.update(__MODULE__, fn state -> 2 end)
   end

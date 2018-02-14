@@ -6,7 +6,7 @@ defmodule KittingSystem.Device do
   @types %{"1": :gateway, "2": :touchstone, "0": :failure, "3": :touchstone_partial}
 
   defmodule State do
-    defstruct [:interface, :device_type, :uart, :fw, :harness, :id]
+    defstruct [:interface, :device_type, :uart, :fw, :harness, :id, num_packets: 0]
   end
 
   def start_link(interface, fw, harness, id) do
@@ -47,22 +47,44 @@ defmodule KittingSystem.Device do
     burn(fw, port)
     send_feedback(state.harness, interface, type, :flashed)
     send_feedback(state.harness, interface, type, :complete)
-    Process.exit(self(), :normal)
-    {:noreply, %State{state | device_type: type}}
+    pid =
+      case type do
+        :gateway ->
+          {:ok, pid} = Nerves.UART.start_link()
+          Nerves.UART.open(pid, state.interface, speed: 115200, framing: {Nerves.UART.Framing.Line, separator: "\n"})
+          pid
+        _ -> Process.exit(self(), :normal)
+    end
+    {:noreply, %State{state | uart: pid, device_type: type}}
   end
 
-  def handle_info({:nerves_uart, port, << "i:", rest::binary>>}, %State{interface: interface} = state) when port == interface do
-    send_feedback(state.harness, interface, :data, "i:#{rest}")
-    {:noreply, state}
+  def handle_info({:nerves_uart, port, <<"i:", rest::binary>>}, %State{interface: interface} = state)
+  when port == interface do
+    d =
+      "i:#{rest}"
+      |> String.split(",")
+      |> Enum.map(fn k -> k |> String.split(":") |> Enum.join("=") end)
+      |> Enum.join(",")
+    send_feedback(state.harness, interface, :gateway, d)
+    total_touchstones = KittingSystem.TouchstoneCounter.get_current()
+    #This doesn't account for bad or dead touchstones
+    case (state.num_packets + 1) == total_touchstones do
+      true ->
+        Nerves.UART.close(state.uart)
+        Nerves.UART.stop(state.uart)
+        Process.exit(self(), :normal)
+      _ -> nil
+    end
+    {:noreply, %State{state | num_packets: state.num_packets + 1}}
   end
 
   def handle_info({:nerves_uart, port, data}, %State{interface: interface} = state) when port == interface do
     {:noreply, state}
   end
 
-  def verify_gateway(state) do
-    Logger.info "Opening Gateway UART: #{state.interface} - #{inspect state.uart}"
-    :ok = Nerves.UART.open(state.uart, state.interface, speed: 115200, framing: {Nerves.UART.Framing.Line, separator: "\n"})
+  def handle_info({:nerves_uart, port, data}, state) do
+    Logger.info "Got Data: #{inspect port} - #{inspect data}"
+    {:noreply, state}
   end
 
   def send_feedback(pid, interface, type, status) do

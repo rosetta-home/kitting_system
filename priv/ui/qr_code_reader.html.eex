@@ -20,8 +20,15 @@
 
 	.host {
 		border: 1px solid #777777;
-		padding: 30px;
 		margin: 20px;
+	}
+
+	.host div{
+		padding: 30px;
+	}
+
+	.host div.complete{
+		background-color: green;
 	}
 
 	.output div{
@@ -34,6 +41,11 @@
 		background-color: #e3e6ef;
 		border: 1px solid #ffffff;
 		padding: 7px;
+	}
+
+	.output div span.device_type{
+		font-weight: bold;
+		font-size: 16px;
 	}
 
 	.output div.verification{
@@ -149,17 +161,17 @@
 	qrcode.debug = true;
 
 	var devices = {};
-	var host = {}
 
 	function parse_device(string){
 		var parts = string.split(":");
+		if(parts[0] == "_") return {};
 		var d = {
 			device: parts[0],
 			action: parts[1],
 			status: parts[2],
 			meta: {},
 		}
-		if(parts[3] && parts[3].startsWith("X")){
+		if(parts[3] && (parts[3].startsWith("t") || parts[3].startsWith("i"))){
 			d.meta = parts[3].split(",").reduce((acc, el) => {
 				var p = el.split("=", 2);
 				acc[p[0]] = p[1];
@@ -170,8 +182,7 @@
 	}
 
 	function update_devices(device){
-		if(Object.keys(device.meta).length) console.log(device);
-		if(!device.action) return;
+		if(!device.device) return;
 		devices = JSON.parse(JSON.stringify(devices));
 		var n = {device: "", action: "", status: "", meta: {}};
 		var d_d = devices[device.device] || n;
@@ -200,19 +211,29 @@
 		xhr.onreadystatechange = function () {
   		if(xhr.readyState === XMLHttpRequest.DONE){
 				sending = false;
+				devices = {};
 			}
 		}
 		xhr.send(params);
 	}
 
 	function render_devices(){
-		console.log(devices);
+		var keys = Object.keys(devices).sort((a, b) => {
+			var a_s = devices[a].action;
+			var b_s = devices[b].action;
+			console.log(a_s);
+			console.log(b_s);
+			var vals = {touchstone: 5, gateway: 4, touchstone_partial: 3, failure: 2, verification: 1, id_verified: 0};
+			var diff = vals[a_s] - vals[b_s]
+			console.log(diff)
+			return diff;
+		});
 		var output = {usb: "", host: ""};
-		Object.keys(devices).forEach( (k) => {
+		keys.forEach( (k) => {
 			var d = devices[k];
 			var id = d.device;
 			if(id.startsWith("ttyUSB")) id = "usb"
-			var st = "<div class=\""+d.status+ " "+d.action+"\"><span class=\"status\"></span><span class=\"display\">"+k+" - "+d.action+": "+d.status+ "</span>"+ meta_keys(d)+"</div>";
+			var st = "<div class=\""+d.status+ " "+d.action+"\"><span class=\"status\"></span><span class=\"display\"><span class=\"device_type\">"+d.action+"</span> - "+ k +": "+d.status+ "</span>"+ meta_keys(d)+"</div>";
 			output[id]+=st;
 		})
 		document.getElementById("host").innerHTML = output.host;
@@ -224,8 +245,8 @@
 		Object.keys(d.meta).forEach((k) => {
 			if(k != "X"){
 				var v = d.meta[k];
-				var c = v == "1" ? "success" : "failure";
-				st += "<li class=\""+c+"\">"+k+"<span></span></li>";
+				var c = v == "0" ? "failure" : "success";
+				st += "<li class=\""+c+"\">"+k+": "+v+"<span></span></li>";
 			}
 		})
 		return st+="</ul>";

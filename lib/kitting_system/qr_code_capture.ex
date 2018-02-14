@@ -6,13 +6,13 @@ defmodule KittingSystem.QRCodeCapture do
   @collection "mac_address"
 
   defmodule State do
-    defstruct [num_devices: 0, completed_devices: 0, current_id: 0]
+    defstruct [num_devices: 0, completed_devices: 0, current_id: 0, num_packets: 0]
   end
 
   def init({:tcp, :http}, req, _opts) do
     {ok, req2} = :cowboy_req.chunked_reply(200, [{"content-type", "text/html"}], req)
     Process.send_after(self(), :handle, 0)
-    {:loop, req2, %State{}}
+    {:loop, req2, %State{}, 200_000}
   end
 
   def info(:handle, req, state) do
@@ -21,26 +21,41 @@ defmodule KittingSystem.QRCodeCapture do
       |> get
       |> verify
       |> enumerate
-      keep_alive(req, 50_000)
+    Process.send_after(self(), :keep_alive, 1000)
     {:loop, req, %State{state | num_devices: num_devices, current_id: id}}
   end
 
-  def info({:device, port, type, :complete}, req, state) do
-    completed = state.completed_devices + 1
-    case completed >= state.num_devices do
+  def info({:device, port, :gateway, <<"i=", rest::binary>>}, req, state) do
+    update_status(req, "#{port}:gateway:complete:i=#{rest}")
+    total_touchstones = KittingSystem.TouchstoneCounter.get_current()
+    #This doesn't account for bad or dead touchstones
+    case (state.num_packets + 1) == total_touchstones do
       true ->
         KittingSystem.TouchstoneCounter.reset()
-        update_status(req, "#{port}:#{type}:complete")
         reply({req, []}, state)
-      false ->
-        update_status(req, "#{port}:#{type}:complete")
-        {:loop, req, %State{state | completed_devices: completed}}
+      _ -> nil
     end
+    {:loop, req, %State{state | num_packets: state.num_packets + 1}}
+  end
+
+  def info({:device, port, type, :complete}, req, state) do
+    update_status(req, "#{port}:#{type}:complete")
+    case state.completed_devices == (state.num_devices - 1) do
+      true -> update_status(req, "host:waiting_for_data:...")
+      false -> nil
+    end
+    {:loop, req, %State{state | completed_devices: state.completed_devices + 1}}
   end
 
   def info({:device, port, type, status}, req, state) do
     Logger.info "Web interface got result from #{port} type: #{type} - #{status}"
     update_status(req, "#{port}:#{type}:#{status}")
+    {:loop, req, state}
+  end
+
+  def info(:keep_alive, req, state) do
+    req |> update_status("_:keep_alive")
+    Process.send_after(self(), :keep_alive, 1000)
     {:loop, req, state}
   end
 
@@ -63,7 +78,7 @@ defmodule KittingSystem.QRCodeCapture do
       )
     id = device |> Map.get("_id") |> BSON.ObjectId.encode!
     Logger.debug "Got ID: #{id}"
-    req |> update_status("host:id_certified:#{id}")
+    req |> update_status("host:id_verified:#{id}")
     {req, id}
   end
 
@@ -74,15 +89,6 @@ defmodule KittingSystem.QRCodeCapture do
   defp reply({req, paths}, state) do
     req |> update_status("host:status:complete")
     {:ok, req, state}
-  end
-
-  defp keep_alive(req, secs) do
-    Task.start_link(fn ->
-      1..secs |> Enum.each(fn _ ->
-        req |> update_status("host:keep_alive:true")
-        :timer.sleep(1000)
-      end)
-    end)
   end
 
   def update_status(req, status, prepend \\ "\r\n") do
