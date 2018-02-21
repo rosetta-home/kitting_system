@@ -2,6 +2,7 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
+config :logger, level: :info
 config :kitting_system, num_labels: 2
 
 # This configuration is loaded before any dependency and is restricted
@@ -20,7 +21,7 @@ config :kitting_system, num_labels: 2
 #
 # Or configure a 3rd-party app:
 #
-#     config :logger, level: :info
+
 #
 
 # It is also possible to import configuration files, relative to this

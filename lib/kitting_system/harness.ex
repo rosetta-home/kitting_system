@@ -18,8 +18,6 @@ defmodule KittingSystem.Harness do
 
   def init(:ok) do
     fw = HardwareVerification.compile()
-    #devices = Nerves.UART.enumerate()
-    #verify_devices(devices, fw, "Tt-Mh=SQ#dn#JY3_")
     {:ok, %State{verification_fw: fw}}
   end
 

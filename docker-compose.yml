@@ -27,9 +27,11 @@ services:
     volumes:
       - nerves-data:/data/nerves
       - ./priv/systems/rosetta_home:/app
-      - ./priv/firmware/hub:/app/apps/fw/_images
+      - ./priv/firmware/hub:/app/apps/fw/_build/rosetta_rpi3/prod/nerves/images
       - ./priv/build/hub:/app/apps/fw/_build
       - ./priv/build/hub:/root/.nerves
+    devices:
+      - "/dev/sdc:/dev/sdc"
     working_dir: /app/apps/fw
     env_file:
       - nerves-firmware.prod.env

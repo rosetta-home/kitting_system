@@ -1,13 +1,18 @@
 defmodule KittingSystem.Compiler.Hub do
   require Logger
-  def compile(id, devices) do
-    Enum.map(1..devices, fn i ->
-      name = "fw#{i}.fw"
-      Logger.debug "Compiling Hub ID: #{id} - #{name}"
-      #TODO Generate certificate/verify
-      System.cmd "docker-compose", ["run", "nerves-firmware", "mix", "do", "deps.get", ",", "firmware"]
-      System.cmd("mv", ["priv/firmware/hub/rpi3/fw.fw", "priv/firmware/hub/rpi3/#{name}"])
-      "priv/firmware/hub/rpi3/#{name}"
-    end)
+  def compile(id) do
+    name = "fw.fw"
+    Logger.debug "Compiling Hub ID: #{id} - #{name}"
+    #TODO Generate certificate/verify
+    res = System.cmd(
+      "docker-compose",
+      ["run", "nerves-firmware",
+      "mix", "do", "deps.get", ",", "firmware", ",", "firmware.burn"],
+      stderr_to_stdout: true,
+      into: [],
+      parallelism: true
+    )
+    Logger.info "#{inspect res}"
+    "priv/firmware/hub/#{name}"
   end
 end
