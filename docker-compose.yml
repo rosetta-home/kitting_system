@@ -31,7 +31,7 @@ services:
       - ./priv/build/hub:/app/apps/fw/_build
       - ./priv/build/hub:/root/.nerves
     devices:
-      - "/dev/sdc:/dev/sdc"
+      - "${NERVES_DEVICE}:${NERVES_DEVICE}"
     working_dir: /app/apps/fw
     env_file:
       - nerves-firmware.prod.env

@@ -52,6 +52,10 @@
 		background: repeating-linear-gradient(45deg, #aabaef, #aabaef 5px, #aaddef 5px, #aaddef 10px);
 	}
 
+	.output div.hub{
+		background-color: #aabaec;
+	}
+
 	.output div.touchstone{
 		background-color: #aabaef;
 	}
@@ -223,7 +227,7 @@
 			var b_s = devices[b].action;
 			console.log(a_s);
 			console.log(b_s);
-			var vals = {touchstone: 5, gateway: 4, touchstone_partial: 3, failure: 2, verification: 1, id_verified: 0};
+			var vals = {hub: 6, touchstone: 5, gateway: 4, touchstone_partial: 3, failure: 2, verification: 1, id_verified: 0};
 			var diff = vals[a_s] - vals[b_s]
 			console.log(diff)
 			return diff;
@@ -232,7 +236,7 @@
 		keys.forEach( (k) => {
 			var d = devices[k];
 			var id = d.device;
-			if(id.startsWith("ttyUSB")) id = "usb"
+			if(id.startsWith("ttyUSB") || id.startsWith("sd")) id = "usb"
 			var st = "<div class=\""+d.status+ " "+d.action+"\"><span class=\"status\"></span><span class=\"display\"><span class=\"device_type\">"+d.action+"</span> - "+ k +": "+d.status+ "</span>"+ meta_keys(d)+"</div>";
 			output[id]+=st;
 		})

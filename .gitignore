@@ -43,7 +43,10 @@ priv/build/hub/*
 priv/build/touchstone/firmware*
 priv/build/gateway/firmware*
 
+priv/certs/*
 !priv/certs/.gitkeep
+!priv/certs/*.sh
+!priv/certs/*.conf
 
 priv/mongo-backup/*
 

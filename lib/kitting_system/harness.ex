@@ -5,7 +5,7 @@ defmodule KittingSystem.Harness do
   alias KittingSystem.Compiler.HardwareVerification
 
   defmodule State do
-    defstruct [devices: %{}, verification_fw: nil, calling_process: nil]
+    defstruct [devices: %{}, id: nil, verification_fw: nil, calling_process: nil]
   end
 
   def enumerate(id) do
@@ -30,7 +30,7 @@ defmodule KittingSystem.Harness do
   def handle_call({:enumerate, id}, {cp, _}, state) do
     devices = Nerves.UART.enumerate()
     verify_devices(devices, state.verification_fw, id)
-    {:reply, Map.keys(devices) |> Enum.count(), %State{state | calling_process: cp}}
+    {:reply, Map.keys(devices) |> Enum.count(), %State{state | id: id, calling_process: cp}}
   end
 
   def handle_info({:device, port, type, status} = mes, state) do

@@ -21,6 +21,7 @@ defmodule KittingSystem.QRCodeCapture do
       |> get
       |> verify
       |> enumerate
+    KittingSystem.Hub.start_link(id, self())
     Process.send_after(self(), :keep_alive, 1000)
     {:loop, req, %State{state | num_devices: num_devices, current_id: id}}
   end
@@ -40,7 +41,7 @@ defmodule KittingSystem.QRCodeCapture do
 
   def info({:device, port, type, :complete}, req, state) do
     update_status(req, "#{port}:#{type}:complete")
-    case state.completed_devices == (state.num_devices - 1) do
+    case state.completed_devices == state.num_devices do
       true -> update_status(req, "host:waiting_for_data:...")
       false -> nil
     end
@@ -83,7 +84,7 @@ defmodule KittingSystem.QRCodeCapture do
   end
 
   defp enumerate({req, id}) do
-    {req, Harness.enumerate(id), id}
+    {req, Harness.enumerate(id) + 1, id}
   end
 
   defp reply({req, paths}, state) do
