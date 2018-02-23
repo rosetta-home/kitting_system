@@ -2,6 +2,7 @@ defmodule KittingSystem.Compiler.Hub do
   require Logger
   def compile(id) do
     name = "fw.fw"
+    :os.cmd('umount /media/root/3041e38d-615b-48d4-affb-a7787b5c4c39')
     device = System.cmd("fwup", ["-z"], into: "") |> elem(0) |> String.trim()
     System.put_env("NERVES_DEVICE", device)
     Logger.info "Compiling Hub ID: #{id} - #{name}"
